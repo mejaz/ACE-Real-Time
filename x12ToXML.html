@@ -1,0 +1,25 @@
+{% extends "acelayout.html" %}
+
+{% block pagetitle %}
+	X12 to XML
+{% endblock %}
+
+{% block body %}
+	<div class='real body'>
+		<div class='col-md-12'>
+
+			<h3><i>X12 to XML</i></h3>	
+			<textarea id='X12req' name='X12req' cols='150' rows='10' placeholder='Place X12 here'></textarea>
+			<br /><br />
+			<button id='parseXML'>Parse to XML</button>
+			<br /><br />
+
+			<div id='parsedXML'>
+				
+			</div>
+
+			<br /><br />
+
+		</div>	
+	</div>
+{% endblock %}

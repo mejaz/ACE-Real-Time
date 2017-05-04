@@ -1,0 +1,68 @@
+{% extends "acelayout.html" %}
+
+{% block pagetitle%}
+	ACE - Real Time Transaction
+{% endblock %}
+
+{% block body %}
+	<div>
+		<div class='col-md-12'>
+			
+				<h2>Real Time Transaction</h2>
+				<textarea class= 'tarea' rows='5' cols='100' placeholder="Your data here..."></textarea>
+
+			
+		</div>
+
+		<div class='col-md-12'>
+			
+				<br />
+				<label>Choose a Transaction Name:</label> 
+				<select onchange="controller.displayRadioButtons()">
+					<option>-- Choose One --</option>
+				</select>
+
+				<br /><br />
+
+				<label>Select Region : </label>
+				<select>
+					<option>-- Choose One --</option>
+				</select>
+				
+
+				<br /><br />
+
+				<label>Endpoint :</label>
+				<input type='text' id='endpoint'/>
+			
+		</div>
+
+		<div class='row'>
+			<div class='col-md-9'>
+				<br /><br />
+
+				<label>Dummy Request is below:</label><br />
+				<textarea class='tarea2' rows='10' cols='150'></textarea><br />
+				<button onclick="controller.createrequests()">Create Requests</button>
+				
+			</div>
+
+			<div class='col-md-9'>
+				<br /><br />
+
+				<label>Created requests:</label><br />
+				<div class="allrequests">No requests created.</div>
+				<button id='allreq' onclick="controller.consolidateAllRequests()">All Requests</button>
+				<button id='runRequest' onclick="controller.runRequest()">Run Request</button>
+			
+			</div>
+
+		</div>
+		<br />
+		<br />
+		<div class='row'>
+			<div class='allreqs'></div>
+		</div>
+
+	</div>
+{% endblock %}

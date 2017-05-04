@@ -1,0 +1,108 @@
+{% extends "acelayout.html" %}
+
+{% block pagetitle%}
+	ACE - Real Time Transaction
+{% endblock %}
+
+{% block body %}
+	<div class='real-body'>
+		<div class='col-md-12'>
+			
+				<h3><i>Real Time Transaction</i></h3>
+				<textarea class= 'tarea' rows='5' cols='100' placeholder="Your data here..."></textarea>
+
+			
+		</div>
+
+		<div class='col-md-12'>
+			
+				<br />
+				<table>
+					<tr>
+						<td>
+							<label>Transaction</label> 
+						</td>
+						<td>
+							<select id='txn_dd'>
+
+								<option value="">-- Choose One --</option>
+								
+								{% for txn in txns %}
+
+									<option>{{ '%s' % txn[0] }}</option>
+
+								{% endfor %}
+
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label>Region</label>
+						</td>
+						<td>
+							<select id='region_dd'>
+								<option value="">-- Choose One --</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label>Endpoint</label>
+						</td>
+						<td>
+							<input type='text' id='endpoint'/>
+						</td>
+					</tr>
+				</table>
+			
+		</div>
+
+		<div class='row'>
+			<div class='col-md-9'>
+				<br /><br />
+
+				<label>Dummy Request is below:</label><br />
+				<textarea class='tarea2' rows='10' cols='150'></textarea><br />
+				<button onclick="controller.createrequests()">Create Requests</button>
+				
+			</div>
+
+			<div class='col-md-9'>
+				<br /><br />
+
+				<label>Created requests:</label><span id='noOfReq'></span><br />
+				<div class="allrequests">No requests created.</div>
+				<button id='allreq' onclick="controller.consolidateAllRequests()">All Requests</button>
+				<button id='runRequest' onclick="controller.runRequest()">Run Request</button>
+			
+			</div>
+
+		</div>
+		<br />
+		<br />
+		<div class='row'>
+			<div class='allreqs'></div>
+		</div>
+
+		<br />
+		<div class='row'>
+			<div id='allresp'><h3>Result: </h3>
+
+				<table id='allresptable'>
+					<tr>
+						<th>S.No.</th>
+						<th>Response X12</th>
+						<th>Tracking Id</th>
+						<th>Result</th>
+						<th>Log File</th>
+					</tr>
+				</table>
+				<span class="ajax-load"><!-- For ajax load wait --></span>
+				
+			</div>
+		</div>
+		<br /><br /><br />
+
+	</div>
+{% endblock %}

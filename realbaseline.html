@@ -1,0 +1,115 @@
+{% extends "acelayout.html" %}
+
+{% block pagetitle%}
+	ACE - Real Time  - Baseline Testing
+{% endblock %}
+
+{% block body %}
+	<div class='real-body'>
+		<div class='col-md-12'>
+			
+			<fieldset>
+				<h3><i>Baseline Testing</i></h3>
+
+				<div>
+					<table>
+						<tr>
+							<td>
+								<label>Transaction</label>
+							</td>
+							<td>	
+								<select id='baseTxnSel'>
+									<option> -- Choose One -- </option>
+									{% for y in txns %}
+
+										<option>{{ '%s' % y[0] }}</option>
+
+									{% endfor %}
+
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>Baseline Region</label>
+							</td>
+							<td>	
+								<select id='baseRegionSel'>
+									<option> -- Choose One -- </option>
+
+									{% for x in regns %}
+
+									<option> {{ '%s' % x[0] }}</option>
+
+									{% endfor %}
+
+								</select>
+							</td>
+							<td>
+								<label>Current Region</label>
+							</td>
+							<td>
+								<select id='curRegionSel'>
+									<option> -- Choose One -- </option>
+
+									{% for x in regns %}
+
+										<option>{{ '%s' % x[0] }}</option>
+
+									{% endfor %}
+
+								</select>
+							</td>
+
+						</tr>
+					</table>
+				</div>	
+			</fieldset>
+				
+
+				<table id='radioSel'>
+					<tr>
+						<td>
+							<input type='radio' name='reqSelect' id='single' value='single' checked/><label for='single'>Single Request</label>
+						</td>
+						<td>
+							<input type='radio' name='reqSelect' id='multiple'  value='multiple'/><label for='multiple'>Multiple Requests</label>
+						</td>
+					</tr>
+				</table>	
+
+				
+
+				<div id='baseReqArSingle'>
+					<textarea cols='150' rows='5' placeholder='Paste your request here...'></textarea>
+				</div>
+
+				<div id='baseReqArMultiple'>
+					<form id='upload_file' method='post' enctype="multipart/form-data">
+
+						<table id='uploadTable'>
+							<tr>
+								<td><label for='file'>Select a file:</label><input type='file' name='file' id='uploadfile'></td>
+
+								<td><button id='upload-file-button' type='button'>Upload</button><label></label></td>
+							</tr>
+						</table>
+						
+					</form><br />
+
+					<label>Requests: </label><span id='noOfReqBaseline'></span>
+					<div id='baselineReq'></div>
+				</div><br />
+			
+
+				<button id='runBaseline'>Run</button><br /><br />
+
+				<div id='two-responses'>
+					
+				</div>
+				<span class="ajax-load"><!-- For ajax load wait --></span><br /><br />
+		</div>
+
+		
+	</div>
+{% endblock %}

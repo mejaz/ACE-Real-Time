@@ -1,0 +1,18 @@
+{% extends "acelayout.html" %}
+
+{% block pagetitle%}
+	ACE - Batch
+{% endblock %}
+
+{% block body %}
+	<div>
+		<h4>Batch Transaction</h4>
+		<form action="{{url_for('batch', txnName='batch837')}}" enctype='multipart/form-data' method="POST">
+			<LABEL for="filename">Input File :</LABEL>
+			<INPUT type="file" name="file">
+			<div id="selectedfilename"></div>
+			<INPUT type="submit" value="send" name="submit">
+		</form>
+	</div>
+{% endblock %}
+

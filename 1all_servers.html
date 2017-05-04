@@ -1,0 +1,102 @@
+{% extends "acelayout.html" %}
+
+{% block pagetitle%}
+	ACE - Real Time Transaction
+{% endblock %}
+
+{% block body %}
+	<div class='real-body'>
+		<div class='col-md-12'>
+			
+				<h3><i>All Servers</i></h3>
+
+				<textarea id='all-servers-req' cols='150' rows='5' placeholder="Put your XML request here..."></textarea><br /><br />
+
+				<table class='all_servers_table'>
+
+					<tr>
+						<td>
+							<label>Transaction</label>
+						</td>
+						<td>
+							
+							<select id='txn_dd'>
+
+								<option value="">-- Choose One --</option>
+								
+								{% for txn in txns %}
+									<option>{{ '%s' % txn[0] }}</option>
+								{%  endfor %}
+
+							</select>
+
+						</td>
+					</tr>
+					<!-- servers -->
+					<tr>
+						<td>
+							<label>SELECT SERVER</label>
+						</td>
+						<td>
+							<input type='radio' name='server-sel' id='ctc' value='Chaska' checked><label for='ctc'>CTC</label>
+						</td>
+						<td>
+							<input type='radio' name='server-sel' id='elr' value='ELR'><label for='elr'>ELR</label>
+						</td>
+
+					</tr>
+
+					<!-- ports -->
+					<tr>
+						<td>
+							<label>SELECT PORT</label>
+						</td>
+						<td>
+							<input type='radio' name='port-sel' id='port1' value='9080' checked><label for='port1'>9080</label>
+						</td>
+						<td>
+							<input type='radio' name='port-sel' id='port2' value='9081'><label for='port2'>9081</label>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<button id='get-servers'>Get Servers</button>
+						</td>
+						<td>
+							<button id='run-requests'>Run</button>
+						</td>
+					</tr>					
+
+				</table> <br />
+
+
+				<div id='display-servers'>
+					<table>
+						<tr>
+							<th>
+								S.No.
+							</th>
+							<th>
+								Server
+							</th>
+							<th>
+								Port
+							</th>
+							<th>
+								Endpoint
+							</th>
+							<th>
+								Result
+							</th>
+						</tr>
+					</table>
+				</div>
+
+				<br /><br /><br />
+				
+
+		</div>
+	</div>
+
+
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "acelayout.html" %}
+
+{% block pagetitle %}
+	Regression - Real Time
+{% endblock %}
+
+{% block body %}
+	<div class='real body'>
+		<div class='col-md-12'>
+
+			<h3><i>Regression Real Time</i></h3>
+
+			<div>
+				<form id='upload_reg_file' method="POST" enctype="multipart/form-data">
+					
+					<table>
+						<tr>
+							<td>
+								<label>Upload Regression Excel File</label><br />
+													
+								<input type='file' name='file' /></td>
+						</tr>
+						<tr>
+							<td>
+								<button id='upload-real-reg' type='button'>Upload</button>
+								<span id='upload-msg'></span>
+							</td>
+						</tr>
+					</table>
+					
+				</form>
+
+				<br />
+				
+
+				<div>
+					<form>
+						<label>Select Region:</label>
+						<select id='reg-region'>
+							{% for x in regions %}
+								<option>{{ x[0] }}</option>
+							{% endfor %}
+						</select>
+
+						<br />
+						<span id='noOfTCs'></span><br />
+						<div class='reg-TCs' id='all-reg-TCs'></div>
+						<br /><br />
+					</form>
+				</div><br />
+				<button id='run-reg-tcs'>Run Test Cases</button>
+				<br /><br />
+			</div>
+
+		</div>
+	</div>
+{% endblock %}
