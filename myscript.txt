@@ -1,0 +1,4 @@
+file-report layout:side-by-side &
+    options:display-all&
+    output-to:%3 &
+    output-options:wrap-word,html-color %1 %2
