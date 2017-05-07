@@ -691,13 +691,17 @@ $(document).ready(function(){
 	$('#get-servers').on('click', function() {
 		
 
-		var server = $('input:radio[name="server-sel"]:checked').val();
-		var port = $('input:radio[name="port-sel"]:checked').val();
+		// var server = $('input:radio[name="server-sel"]:checked').val();
+		var server_type = $('#svr_typ').find('option:selected').text()
+		var server_region = $('#svr_rgn').find('option:selected').text()
+		var server_port = $('#svr_port').find('option:selected').text()
+		// var port = $('input:radio[name="port-sel"]:checked').val();
+
 		var rows;
 
 		$('#display-servers > table > tr').remove();
 		$.ajax({
-			url: '/real/allservers/getservers/' + server + '/' + port,
+			url: '/real/allservers/getservers/' + server_type + '/' + server_region + '/' + server_port,
 			type: 'GET',
 			success: function(response) {
 				var resp = $.parseJSON(response);
@@ -708,10 +712,10 @@ $(document).ready(function(){
 				for(var i = 0; i < all_servers.length; i++) {
 
 					rows = 	"<tr><td><input class='checkit' type='checkbox'></td><td>" + (parseInt(i) + 1) + "</td>" + 
-							"<td id='" + all_servers[i][1] + "'>" + server + "</td>" + 
-							"<td>" + port + "</td>" + 
+							"<td id='" + all_servers[i][1] + "'>" + server_region + "</td>" + 
+							"<td>" + server_port + "</td>" + 
 							"<td>" + all_servers[i][0] + "</td>" +
-							"<td class='ajax-server-result'></td></tr>";
+							"<td></td></tr>";
 					$('#display-servers > table').append(rows);
 				};
 
@@ -792,11 +796,27 @@ $(document).ready(function(){
 
 		// seleted transaction
 		var txnName = $('#txn_dd').find('option:selected').text().trim();
+		var server_type = $('#svr_typ').find('option:selected').text()
+		var server_region = $('#svr_rgn').find('option:selected').text()
+		var server_port = $('#svr_port').find('option:selected').text()		
 
 		// extract X12 from the request XML
-		var start_pos = tempReq.indexOf('ISA*');
-		var end_pos = tempReq.indexOf('</generic:businessMessagePayload>');
-		var myX12 = tempReq.substring(start_pos, end_pos);
+
+		if (tempReq.includes('</generic:businessMessagePayload>') && tempReq.includes('<generic:businessMessagePayload>')) {
+			var start_pos = tempReq.indexOf('ISA*');
+			var end_pos = tempReq.indexOf('</generic:businessMessagePayload>');
+			var myX12 = tempReq.substring(start_pos, end_pos);
+
+			console.log(myX12);
+
+			
+
+		} else {
+			alert("'<generic:businessMessagePayload>' tag not found in the XML request!!");
+			return;
+		}
+
+		// return;
 
 		for(var i=0; i < $serverTable.length; i++) {
 		// 	// console.log($($serverTable[i]).find('td').eq(3).text());
@@ -809,7 +829,7 @@ $(document).ready(function(){
 				
 
 					// prepare the server endpoint and data object
-					var alls_url = '/real/allservers/processX12/' + txnName;
+					var alls_url = '/real/allservers/processX12/' + server_type + '/' + txnName;
 					var ser_id = $($serverTable[i]).find('td').eq(2).attr('id');
 					var alls_data = {'reqX12' : myX12, 'ser_id' : ser_id};
 
@@ -817,7 +837,7 @@ $(document).ready(function(){
 					controller.ajax_post_call(alls_url, alls_data, function(response) {
 						var $response = $.parseJSON(response);
 
-						$($serverTable[i]).find('td').eq(5).after('<div> <label>Return Code:</label>' + $response[2] + '</div><div><label>Return Code Description:</label>' + ($response[3] === 'success' ? "<span class='pass'>"+ $response[3] +"</span>" : "<span class='fail'>" + $response[3] + "</span>") + '</div><div><label>Tracking ID:</label>'+ $response[1] +'</div><div><label>Response Time : ' + $response[4] + ' ms</label></div><br /><div><label>Response X12:</label><textarea class="two-resp-text" cols="40" rows="8">'+ $response[0].replace(/~/g, '~\n') +'</textarea></div>');
+						$($serverTable[i]).find('td').eq(5).html('<div> <label>Return Code:</label>' + $response[2] + '</div><div><label>Return Code Description:</label>' + ($response[3] === 'success' ? "<span class='pass'>"+ $response[3] +"</span>" : "<span class='fail'>" + $response[3] + "</span>") + '</div><div><label>Tracking ID:</label>'+ $response[1] +'</div><div><label>Response Time : ' + $response[4] + ' ms</label></div><br /><div><label>Response X12:</label><textarea class="two-resp-text" cols="40" rows="8">'+ $response[0].replace(/~/g, '~\n') +'</textarea></div>');
 					});
 
 				};
@@ -865,6 +885,8 @@ $(document).ready(function(){
 										"<th>Request XML</th>"+
 										"<th>Validate X12?</th>"+
 										"<th>X12 Validation<br />(Expected Value)</th>"+
+										"<th>Validate Logs?</th>"+
+										"<th>Logs Validation<br />(Expected Value)</th>"+
 										"<th>Response X12</th>"+
 										"<th>Result</th>"+
 									"</tr>"+
@@ -905,6 +927,28 @@ $(document).ready(function(){
 
 										temprow += "<td>"+
 														"<span id='reg-rows' name='xvald'>" + requestTCs[i][j] + "</span>"
+												  +"</td>";
+												  // "<td>"+
+														// "<span id='reg-rows' name='resultX12'>Blank</span>"
+												  // +"</td>"+
+												  // "<td>"+
+														// "<span id='reg-rows' name='result'>Blank</span>"
+												  // +"</td>";
+									} else if (j === 5) {									
+
+										temprow += "<td>"+
+														"<span id='reg-rows' name='lyn'>" + requestTCs[i][j] + "</span>"
+												  +"</td>";
+												  // "<td>"+
+														// "<span id='reg-rows' name='resultX12'>Blank</span>"
+												  // +"</td>"+
+												  // "<td>"+
+														// "<span id='reg-rows' name='result'>Blank</span>"
+												  // +"</td>";
+									} else if (j === 6) {									
+
+										temprow += "<td>"+
+														"<span id='reg-rows' name='lvald'>" + requestTCs[i][j] + "</span>"
 												  +"</td>"+
 												  "<td>"+
 														"<span id='reg-rows' name='resultX12'>Blank</span>"
@@ -1102,7 +1146,6 @@ $(document).ready(function(){
 					}
 
 					$('#svr_port > option').remove();
-					$('#svr_port').append('<option value="">-- Choose One --</option>');
 					$('#svr_port').append(port_names);
 
 				},
