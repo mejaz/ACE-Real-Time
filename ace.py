@@ -133,8 +133,9 @@ def processX12(region, txnName):
 
 		# make a POST request
 		r = requests.post(server_endpnt, request_XML, headers=headers)
+		print r
 
-
+		print 'parsing at minidom'
 		# Parse the XML response
 		xmldoc = minidom.parseString(r.text)
 
@@ -385,6 +386,81 @@ def folderOpen():
 	return resp
 
 
+@app.route('/real/getServerRegions/<string:svr>', methods=['GET'])
+def getRegions(svr):
+
+	print svr 
+	CONN = make_a_connection('B2BACE.accdb')[0]	
+
+		
+
+	if svr == 'WAS':
+
+		svr_rgns = 'SELECT DISTINCT SERVER_NAME FROM WAS_SERVER_INFO;'
+		all_rgns = getRecords(CONN, svr_rgns).fetchall()
+		print all_rgns
+
+		all_rgns = [list(x) for x in all_rgns]
+
+		msg_disc = disconnect_database(CONN)
+		print msg_disc	
+
+
+		return json.dumps(all_rgns)
+
+	elif svr == 'JBOSS':
+
+		svr_rgns = 'SELECT DISTINCT SERVER_NAME FROM JBOSS_SERVER_INFO;'
+		all_rgns = getRecords(CONN, svr_rgns).fetchall()
+		print all_rgns
+
+		all_rgns = [list(x) for x in all_rgns]
+
+		msg_disc = disconnect_database(CONN)
+		print msg_disc	
+
+
+		return json.dumps(all_rgns)
+
+
+@app.route('/real/getServerPorts/<string:svr_type>/<string:rgn>', methods=['GET'])
+def getRegionsPorts(svr_type, rgn):
+
+	CONN = make_a_connection('B2BACE.accdb')[0]	
+
+	if svr_type == 'WAS':
+
+		svr_ports = "SELECT DISTINCT SERVER_PORT FROM WAS_SERVER_INFO WHERE SERVER_NAME='%s';" % rgn
+		all_ports = getRecords(CONN, svr_ports).fetchall()
+		print all_ports
+
+		all_ports = [list(x) for x in all_ports]
+
+		msg_disc = disconnect_database(CONN)
+		print msg_disc	
+
+
+		return json.dumps(all_ports)
+	
+	elif svr_type == 'JBOSS':
+
+		svr_ports = "SELECT DISTINCT SERVER_PORT FROM JBOSS_SERVER_INFO WHERE SERVER_NAME='%s';" % rgn
+		all_ports = getRecords(CONN, svr_ports).fetchall()
+		print all_ports
+
+		all_ports = [list(x) for x in all_ports]
+
+
+		msg_disc = disconnect_database(CONN)
+		print msg_disc	
+
+		return json.dumps(all_ports)
+
+		
+
+
+
+
 @app.route('/real/allservers', methods=['GET', 'POST'])
 def all_servers():
 
@@ -397,8 +473,12 @@ def all_servers():
 	try:
 		
 		txn_query = 'SELECT TRANS_NAME FROM TRANS_REAL;'
+		svr_query = 'SELECT SERVER_TYPE FROM GENERIC_REQUEST;'
+		
 
 		all_real_trans = getRecords(CONN, txn_query).fetchall()
+		all_svrs = getRecords(CONN, svr_query).fetchall()
+		
 		
 	except Exception, e:
 		print (e)
@@ -406,33 +486,49 @@ def all_servers():
 	msg_disc = disconnect_database(CONN)
 	print msg_disc	
 
-	return render_template('all_servers.html', txns = all_real_trans)
+	return render_template('all_servers.html', txns = all_real_trans, svrs = all_svrs)
 
 
-@app.route('/real/allservers/getservers/<string:server>/<string:port>', methods=['GET'])
-def get_servers(server, port):
+@app.route('/real/allservers/getservers/<string:server_type>/<string:server_region>/<string:server_port>', methods=['GET'])
+def get_servers(server_type, server_region, server_port):
 
-	""" returns all the servers with port specific number """
+	""" returns all the WAS/JBOSS servers with port specific number """
 
 	# Connect to the Database
 	CONN = make_a_connection('B2BACE.accdb')[0]		
 
-	txn_query_1 = "SELECT SERVER_ENDPOINT, SERVER_ID FROM SERVER_INFO WHERE SERVER_NAME=\'%s\' AND SERVER_PORT=\'%s\';" % (server, port)
-	print txn_query_1
+	if server_type == 'WAS':
 
-	temp_servers = getRecords(CONN, txn_query_1).fetchall()
+		txn_query_1 = "SELECT SERVER_ENDPOINT, SERVER_ID FROM WAS_SERVER_INFO WHERE SERVER_NAME=\'%s\' AND SERVER_PORT=\'%s\';" % (server_region, server_port)
+		print txn_query_1
 
-	req_servers = [list(row) for row in temp_servers]
+		temp_servers = getRecords(CONN, txn_query_1).fetchall()
 
-	msg_disc = disconnect_database(CONN)
-	print msg_disc	
+		req_servers = [list(row) for row in temp_servers]
 
-	return json.dumps({'allservers' : req_servers})
+		msg_disc = disconnect_database(CONN)
+		print msg_disc	
+
+		return json.dumps({'allservers' : req_servers})
+
+	elif server_type == 'JBOSS':
+
+		txn_query_1 = "SELECT SERVER_ENDPOINT, SERVER_ID FROM JBOSS_SERVER_INFO WHERE SERVER_NAME=\'%s\' AND SERVER_PORT=\'%s\';" % (server_region, server_port)
+		print txn_query_1
+
+		temp_servers = getRecords(CONN, txn_query_1).fetchall()
+
+		req_servers = [list(row) for row in temp_servers]
+
+		msg_disc = disconnect_database(CONN)
+		print msg_disc	
+
+		return json.dumps({'allservers' : req_servers})
 
 
 
-@app.route('/real/allservers/processX12/<string:txnName>', methods=['POST'])
-def run_all_servers(txnName):
+@app.route('/real/allservers/processX12/<string:server_type>/<string:txnName>', methods=['POST'])
+def run_all_servers(server_type, txnName):
 
 	# Connect to the Database
 	CONN = make_a_connection('B2BACE.accdb')[0]	
@@ -441,19 +537,36 @@ def run_all_servers(txnName):
 
 		# try:
 
-		print request.json['ser_id']
-		# Prepare the select query
-		query_server_id = "SELECT SERVER_ENDPOINT FROM SERVER_INFO WHERE SERVER_ID='%s';" % request.json['ser_id']
-		# txn_query_2 = "SELECT GENRIC_REQ FROM TRANS_REAL WHERE TRANS_NAME='%s';" % txnName
+		if server_type == 'WAS':
+			
+			print request.json['ser_id']
 
-		# get XML requests
-		query_get_XML = "SELECT XML_REQUEST FROM GENERIC_REQUEST WHERE SERVER_TYPE = '%s';" % 'WAS'
-		dummy_XML_request = getRecords(CONN, query_get_XML).fetchall()
+			# Prepare the select query
+			query_server_id = "SELECT SERVER_ENDPOINT FROM WAS_SERVER_INFO WHERE SERVER_ID='%s';" % request.json['ser_id']
+			# txn_query_2 = "SELECT GENRIC_REQ FROM TRANS_REAL WHERE TRANS_NAME='%s';" % txnName
 
-		# Fetch records from the DB by running the query
-		db_server_edpt = getRecords(CONN, query_server_id).fetchall()
-		# db_records_2 = getRecords(CONN, txn_query_2).fetchall()
-		
+			# get XML requests
+			query_get_XML = "SELECT XML_REQUEST FROM GENERIC_REQUEST WHERE SERVER_TYPE = '%s';" % 'WAS'
+			dummy_XML_request = getRecords(CONN, query_get_XML).fetchall()
+
+			# Fetch records from the DB by running the query
+			db_server_edpt = getRecords(CONN, query_server_id).fetchall()
+			# db_records_2 = getRecords(CONN, txn_query_2).fetchall()
+
+		elif server_type == 'JBOSS':
+
+			print request.json['ser_id']
+
+			# Prepare the select query
+			query_server_id = "SELECT SERVER_ENDPOINT FROM JBOSS_SERVER_INFO WHERE SERVER_ID='%s';" % request.json['ser_id']
+
+			# get XML requests
+			query_get_XML = "SELECT XML_REQUEST FROM GENERIC_REQUEST WHERE SERVER_TYPE = '%s';" % 'JBOSS'
+			dummy_XML_request = getRecords(CONN, query_get_XML).fetchall()
+
+			# Fetch records from the DB by running the query
+			db_server_edpt = getRecords(CONN, query_server_id).fetchall()
+					
 		
 		# Update the Payload request with the request X12
 		request_XML = str(dummy_XML_request[0][0]).replace('#Req_X12#', request.json['reqX12']).replace('#Req_Type#', txnName.strip())
@@ -697,3 +810,5 @@ def x12ToparsedXML():
 if __name__ == '__main__':
 	app.debug = True
 	app.run(host='0.0.0.0', port=5000, threaded=True)
+
+
