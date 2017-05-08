@@ -188,3 +188,29 @@ def get_TCs(filename):
 
 	# Return the final list
 	return [0, final_TCs_list]
+
+
+def checkSubString(filename, substr):
+	""" checks for the substring in the .txt file and returns the matched strings """
+
+	f = open(filename, 'r')
+
+	matchesArr = []
+
+	for x in f:
+		if substr in x:
+			matchesArr.append(x)
+
+	f.close()
+
+	if len(matchesArr) > 0:
+
+		return {'found' : 'Yes', 'matches' : matchesArr}
+
+	else:
+
+		return {'found' : 'No', 'matches' : ['No match found.']}
+
+# r = checkSubString(r'C:\\Users\\msiddiq1\\Documents\\Test-Python\\Project ACE\\logs\\270\\2017.05.07', "Combination of Submitter-Id and Transaction found in DataBase")
+
+# print r

@@ -122,7 +122,7 @@ ul.realTxns > li:hover {
 	background-color: #f7eed2;
 }
 
-#region_dd, #txn_dd{
+#region_dd, #txn_dd, #svr_typ, #svr_rgn, #svr_port{
 	width: 140px;
 	text-align: left;
 }
@@ -260,16 +260,22 @@ body.loading .ajax-load, body.loading .ajax-server-result {
                 no-repeat;
 }
 
+.waiting {
+	width: 40px;
+	height: 40px;
+}
+
 #display-servers > table > tbody > tr > th, #display-servers > table > tbody > tr > td {
 	border: 1px solid black;
 }
 
 .reg-TCs {
 	padding: 1%;
-	max-height: 300px;
+	padding-right: 1%;
+	max-height: 1000px;
+	max-width: 1200px;
 	overflow: auto;
 	border:	2px lightgrey solid;
-	padding: 2%;
 }
 
 #reg-rows {
@@ -278,6 +284,7 @@ body.loading .ajax-load, body.loading .ajax-server-result {
 
 table#reg-tc-table {
 	font-size: 10px;
+	padding-right: 2%;
 }
 
 table#reg-tc-table > tbody > tr > td, table#reg-tc-table > tbody > tr > th {
@@ -308,17 +315,30 @@ table#reg-tc-table > tbody > tr > th:nth-child(2), table#reg-tc-table > tbody > 
 	min-width: 60px;
 	max-width: 60px;
 }
+#reg-tc-table > tbody > tr > th:nth-child(7), #reg-tc-table > tbody > tr > td:nth-child(7) {
+	min-width: 60px;
+	max-width: 60px;
+}
 #reg-tc-table > tbody > tr > th:nth-child(6), #reg-tc-table > tbody > tr > td:nth-child(6) {
 	min-width: 110px;
 	max-width: 110px;
 }
-#reg-tc-table > tbody > tr > th:nth-child(7), #reg-tc-table > tbody > tr > td:nth-child(7) {
+#reg-tc-table > tbody > tr > th:nth-child(9), #reg-tc-table > tbody > tr > td:nth-child(9) {
 	min-width: 180px;
 	max-width: 180px;
 }
-#reg-tc-table > tbody > tr > th:nth-child(8), #reg-tc-table > tbody > tr > td:nth-child(8) {
+#reg-tc-table > tbody > tr > th:nth-child(10), #reg-tc-table > tbody > tr > td:nth-child(10) {
 	min-width: 250px;
-	max-width: 250px;
+	max-width: 500px;
+}
+
+.resultFinal {
+	min-height: 100px;
+	max-height: 100px;
+	min-width: 470px;
+	max-width: 470px;
+	overflow: auto;
+
 }
 
 /*#reg-tc-table > tbody > tr > th:nth-child(5), #reg-tc-table > tbody > tr > td:nth-child(5) {
@@ -328,4 +348,12 @@ table#reg-tc-table > tbody > tr > th:nth-child(2), table#reg-tc-table > tbody > 
 
 #xmlparsed, #X12req {
 	padding: 2%;
+}
+
+.align-bottom-rel {
+	position: relative;
+}
+.align-bottom-abs {
+	position: absolute;
+	bottom: 10px;
 }

@@ -928,33 +928,23 @@ $(document).ready(function(){
 										temprow += "<td>"+
 														"<span id='reg-rows' name='xvald'>" + requestTCs[i][j] + "</span>"
 												  +"</td>";
-												  // "<td>"+
-														// "<span id='reg-rows' name='resultX12'>Blank</span>"
-												  // +"</td>"+
-												  // "<td>"+
-														// "<span id='reg-rows' name='result'>Blank</span>"
-												  // +"</td>";
+
 									} else if (j === 5) {									
 
 										temprow += "<td>"+
 														"<span id='reg-rows' name='lyn'>" + requestTCs[i][j] + "</span>"
 												  +"</td>";
-												  // "<td>"+
-														// "<span id='reg-rows' name='resultX12'>Blank</span>"
-												  // +"</td>"+
-												  // "<td>"+
-														// "<span id='reg-rows' name='result'>Blank</span>"
-												  // +"</td>";
+
 									} else if (j === 6) {									
 
 										temprow += "<td>"+
-														"<span id='reg-rows' name='lvald'>" + requestTCs[i][j] + "</span>"
+														"<textarea cols='25' rows='3' id='reg-rows' name='lvald' readonly>" + requestTCs[i][j] + "</textarea>"
 												  +"</td>"+
 												  "<td>"+
 														"<span id='reg-rows' name='resultX12'>Blank</span>"
 												  +"</td>"+
 												  "<td>"+
-														"<span id='reg-rows' name='result'>Blank</span>"
+														"<div id='reg-rows' name='result' class='resultFinal'>Blank</div>"
 												  +"</td>";
 									}
 									
@@ -991,7 +981,9 @@ $(document).ready(function(){
 			var transType = $this.find('[name="transType"]').text();
 			var xmlReq = $this.find('[name="xmlReq"]').text();
 			var xyn = $this.find('[name="xyn"]').text();
+			var lyn = $this.find('[name="lyn"]').text();
 			var xvald = $this.find('[name="xvald"]').text();
+			var lvald = $this.find('[name="lvald"]').text();
 			var region = $('#reg-region').find('option:selected').text();
 			var placeResult = $this.find('[name="result"]');
 			var placeResultX12 = $this.find('[name="resultX12"]');
@@ -1002,7 +994,7 @@ $(document).ready(function(){
 			var regX12 = xmlReq.substring(start_pos, end_pos);			
 
 			// data disctionary
-			rowData = {'xvald' : xvald, 'transType' : transType, 'regX12' : regX12, 'xyn' : xyn, 'region' : region};
+			rowData = {'xvald' : xvald, 'lvald' : lvald , 'transType' : transType, 'regX12' : regX12, 'xyn' : xyn, 'lyn' : lyn, 'region' : region};
 
 			console.log(rowData);
 
@@ -1013,54 +1005,154 @@ $(document).ready(function(){
 				contentType: 'application/json;charset=UTF-8',
 				success: function(data) {
 					var resp = $.parseJSON(data);
-					if (resp['result'] === 'Pass') {
+					var x12ValidationResult = resp['result'];
+					// if (resp['result'] === 'Pass') {
 
-						var resArr = resp['msg'];
-						var tempresult = "";
-						for(var i=0; i<resArr.length; i++) {
+					var resArr = resp['msg'];
+					var tempresult = "";
+					for(var i=0; i<resArr.length; i++) {
 
-							for (var key in resArr[i]) {
+						// for (var key in resArr[i]) {
+						// 	tempresult +="<li><span class='pass'>" + resArr[i][key][0] + "</span> -- <span>" + resArr[i][key][1] +"</span>" + "</li>";
+						// }
+
+						for (var key in resArr[i]) {
+
+							if (resArr[i][key][0] === 'Pass') {
 								tempresult +="<li><span class='pass'>" + resArr[i][key][0] + "</span> -- <span>" + resArr[i][key][1] +"</span>" + "</li>";
+							} else {
+								tempresult +="<li><span class='fail'>" + resArr[i][key][0] + "</span> -- <span>" + resArr[i][key][1] +"</span>" + "</li>";
 							}
+						}
 
-						}	
 
-						var presult = "<div class='pass'>" + resp['result'] + "</div><br /><ol>"+ tempresult +"</ol>";
-						var presX12 = "<textarea cols='20' rows='3' readonly>"+ resp['responseX12'] +"</textarea>";
+					}	
 
-						placeResult.html(presult);
-						placeResultX12.html(presX12);
+					var presult = "<div> -- X12 Validaitons -- </div><div>Tracking Id : "+ resp['tckngId'] +"</div>"+
+									"<div>Response Status : "+ resp['respCodeDesc'] +"</div>"+
+									"<ol>"+ tempresult +"</ol>";
 
+
+					var presX12 = "<textarea cols='20' rows='3' readonly>"+ resp['responseX12'] +"</textarea>";
+
+					placeResult.html(presult);
+					placeResultX12.html(presX12);
+
+					// } else {
+
+					// 	var resArr = resp['msg'];
+					// 	var tempresult = "";
+					// 	for(var i=0; i<resArr.length; i++) {
+
+					// 		for (var key in resArr[i]) {
+
+					// 			if (resArr[i][key][0] === 'Pass') {
+					// 				tempresult +="<li><span class='pass'>" + resArr[i][key][0] + "</span> -- <span>" + resArr[i][key][1] +"</span>" + "</li>";
+					// 			} else {
+					// 				tempresult +="<li><span class='fail'>" + resArr[i][key][0] + "</span> -- <span>" + resArr[i][key][1] +"</span>" + "</li>";
+					// 			}
+					// 		}
+
+					// 	}	
+
+					// 	var fresult = "<div class='fail'>" + resp['result'] + "</div>"+
+					// 					"<div> Tracking Id : "+ resp['tckngId'] +"</div>"+
+					// 					"<div>Response Status : "+ resp['respCodeDesc'] +"</div>"+
+					// 					"<ol>"+ tempresult +"</ol>";
+
+
+					// 	var fresX12 = "<textarea cols='20' rows='3' readonly>"+ resp['responseX12'] +"</textarea>";
+
+					// 	placeResult.html(fresult);
+					// 	placeResultX12.html(fresX12);
+
+					// }
+					
+					console.log(lyn.trim().toUpperCase());
+
+					if (lyn.trim().toUpperCase() === 'YES') {
+						// Get Logs
+						$.ajax({
+							url: '/real/getLogs/' + region + '/' + transType + '/' + resp['tckngId'] + '/Y',
+							type: 'GET',
+							contentType: 'application/json;charset=UTF-8',
+							success: function(response) {
+
+								response = $.parseJSON(response);
+
+								RegLogFilename = response[1].message;
+								console.log(RegLogFilename);
+								logsLink = "<label>Logs:</label><a href='/goToLogFile/"+ transType + "/" + RegLogFilename.split('\\\\')[2] + '/' + RegLogFilename.replace(/^.*[\\\/]/, '') + "' target='_blank'>" + RegLogFilename.replace(/^.*[\\\/]/, '') + "</a>";
+
+								placeResult.append('<div>-- Logs Results --</div>' + logsLink);
+
+								$.ajax({
+									url: '/logs/validate/' + transType + "/" + RegLogFilename.split('\\\\')[2] + '/' + RegLogFilename.replace(/^.*[\\\/]/, ''),
+									type: 'POST',
+									data: JSON.stringify({'lvald' : lvald}),
+									contentType: 'application/json;charset=UTF-8',
+									success: function(response) {
+										var logValresp = $.parseJSON(response);
+										var eachResp = "";
+
+										// final log val result
+										var logValidationResult = logValresp[0];
+										var resp = logValresp[1];
+
+										console.log(logValidationResult);
+										console.log(resp);
+
+
+										// iterating through each lvalds
+										for (var key in resp) {
+
+											var valresponse = "";
+											var allmatches = "";
+
+											valresponse += "<li>" + key + " : " + ((resp[key][0] === 'Found') ? "<span class='pass'>Found</span>" : "<span class='fail'>Not Found</span>");
+
+											console.log(valresponse);
+
+											// iterating through each match of the lvalds
+											for (var i = 0; i < resp[key][1]['matches'].length; i++) {
+
+												allmatches += "<li>" + resp[key][1]['matches'][i] + "</li>";
+
+											}
+
+											eachResp += valresponse + "<ul>" + allmatches + "</ul></li>";
+
+										}
+
+										// place the final logs validation result
+										placeResult.append("<ol>" + eachResp + "</ol>");
+
+										// Checking the final result
+
+										if (x12ValidationResult === 'Pass' && logValidationResult === 'Pass') {
+											placeResult.prepend("<div class='pass'>Pass</div>");
+										} else {
+											placeResult.prepend("<div class='fail'>Fail</div>");
+										};
+
+									},
+									error: function(error) {
+										alert(error);
+									}
+								});		
+
+							},
+							error: function(error) {
+								alert('error');
+							}
+						});
+					
 					} else {
 
-						var resArr = resp['msg'];
-						var tempresult = "";
-						for(var i=0; i<resArr.length; i++) {
+						placeResult.append('<div>-- Logs Validation is not required. --</div>');
 
-							for (var key in resArr[i]) {
+					};
 
-								if (resArr[i][key][0] === 'Pass') {
-									tempresult +="<li><span class='pass'>" + resArr[i][key][0] + "</span> -- <span>" + resArr[i][key][1] +"</span>" + "</li>";
-								} else {
-									tempresult +="<li><span class='fail'>" + resArr[i][key][0] + "</span> -- <span>" + resArr[i][key][1] +"</span>" + "</li>";
-								}
-							}
-
-						}	
-
-						var fresult = "<div class='fail'>" + resp['result'] + "</div><br /><ol>"+ tempresult +"</ol>";
-
-
-						// console.log(resp['result']);
-						// console.log(resp['msg']);
-						var fresX12 = "<textarea cols='20' rows='3' readonly>"+ resp['responseX12'] +"</textarea>";
-
-						placeResult.html(fresult);
-						placeResultX12.html(fresX12);
-
-					}
-					
-					// console.log(resp['segResponse']);
 
 				}, 
 				error: function(err1, err2, err3) {

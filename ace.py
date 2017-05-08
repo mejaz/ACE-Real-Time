@@ -11,7 +11,7 @@ import ibm_db
 import pysftp
 from xml.dom import minidom
 from dblib import make_a_connection, getRecords, disconnect_database
-from bsfunc import getLogs, getDateTime, writeToFile, get_X12s, get_TCs
+from bsfunc import getLogs, getDateTime, writeToFile, get_X12s, get_TCs, checkSubString
 from bcfunc import bcfiles
 from x12funcs import x12ToXML, getSegmentValues, compareResponse
 
@@ -159,7 +159,8 @@ def processX12(region, txnName):
 @app.route('/real/getLogs/<string:region>/<string:txnName>/<string:txnID>/<string:logsFlag>', methods=['GET'])
 def sendLogs(region, txnName, txnID, logsFlag):
 
-	""" returns logs file array object """
+	""" returns logs file array object , logs flag Y means a log file will 
+			be created, else only logs string will be created"""
 
 	# Connect to the Database
 	CONN = make_a_connection('B2BACE.accdb')[0]	
@@ -270,6 +271,56 @@ def goToLogFile(selFolder, selTxn, fold, filename):
 
 	return send_from_directory(directory=path, filename=filename)
 
+
+@app.route('/logs/validate/<string:selTxn>/<string:fold>/<string:filename>', methods=['POST'])
+def validateLogs(selTxn, fold, filename):
+
+	
+	try:
+		log_folder = os.path.join(current_app.root_path, 'logs')
+		path = '%s\\%s\\%s\\%s' % (log_folder, selTxn, fold, filename)
+
+		print path
+
+		lvald = request.json['lvald'].strip()
+		lvaldList = lvald.split('\n')
+
+		responseDict = {}
+		finalResult = ""
+
+		for lvals in lvaldList:
+
+			tempVald = checkSubString(path, lvals.strip())
+
+			if tempVald['found'] == 'Yes':
+
+				responseDict[lvals] = ['Found' , tempVald]
+			
+			else:
+
+				responseDict[lvals] = ['Not Found' , tempVald]
+				finalResult = 'Fail'
+
+		# Checking the final result
+		if finalResult == 'Fail':
+
+			print responseDict
+			return json.dumps(['Fail', responseDict])	
+
+		else:
+
+			print responseDict
+			return json.dumps(['Pass', responseDict])	
+
+		
+
+
+	except Exception, e:
+		print e
+
+		responseDict['error'] = e
+
+		return json.dumps(responseDict)
 
 
 
@@ -623,13 +674,14 @@ def regressionreal():
 
 		# Extract all the json reuest params
 		xvald = request.json['xvald']
+		lvald = request.json['lvald']
 		transType = request.json['transType']
 		regX12 = request.json['regX12']
 		region = request.json['region']
 		xyn = request.json['xyn']
+		lyn = request.json['lyn']
 
 		# prepare the select query
-		# regn_query = "SELECT PAYLD_ENDPT FROM TRANS_REGION WHERE REGION='%s';" % region
 		query_regn_servr_type = "SELECT PAYLD_ENDPT, SERVER_TYPE FROM TRANS_REGION WHERE REGION='%s';" % region
 		
 		# run queries
@@ -642,18 +694,11 @@ def regressionreal():
 		print server_endpnt
 		print server_type_name					
 
-		# txn_query = "SELECT GENRIC_REQ FROM TRANS_REAL WHERE TRANS_NAME='%s';" % transType
 		# get XML requests
 		query_get_XML = "SELECT XML_REQUEST FROM GENERIC_REQUEST WHERE SERVER_TYPE = '%s';" % server_type_name
 		dummy_XML_request = getRecords(CONN, query_get_XML).fetchall()		
 
 
-		# run queries
-		# endpnt = getRecords(CONN, regn_query).fetchall()
-		# txnReq = getRecords(CONN, txn_query).fetchall()
-
-		# replace and prepare XML request
-		# request_XML = str(txnReq[0][0]).replace('#Req_X12#', request.json['regX12'])
 		# Update the Payload request with the request X12
 		request_XML = str(dummy_XML_request[0][0]).replace('#Req_X12#', regX12).replace('#Req_Type#', transType.strip())
 		print request_XML			
@@ -661,8 +706,6 @@ def regressionreal():
 		# Prepare the header for the webservice request
 		headers = {'Content-Type': 'text/xml', 'charset': 'UTF-8', 'SOAPAction': ""}
 
-		# print endpnt[0][0]
-		# print request_XML
 
 		msg_disc = disconnect_database(CONN)
 		print msg_disc			
@@ -686,73 +729,80 @@ def regressionreal():
 
 		xmlFinalResultArr = []
 
-		# proceed if user checks for success
-		if expresp.strip().upper() == 'SUCCESS':
-		
-			# proceed if response is success
-			if respCodeDesc.strip().upper() == 'SUCCESS':
+		# check if x12 validation is required
+		if xyn.strip().upper() == 'YES':
+
+			# proceed if user checks for success
+			if expresp.strip().upper() == 'SUCCESS':
 			
-				# convert X12 to XML
-				xmlresponse = x12ToXML(x12resp)
-				print xmlresponse
-
-				# to capture responses for each segment validation
-				xmlResponseSegmentsArr = []
+				# proceed if response is success
+				if respCodeDesc.strip().upper() == 'SUCCESS':
 				
-				allLoopvaldsArr = allLoopvalds.split("\n")
+					# convert X12 to XML
+					xmlresponse = x12ToXML(x12resp)
+					print xmlresponse
 
-				for x in allLoopvaldsArr:
+					# to capture responses for each segment validation
+					xmlResponseSegmentsArr = []
+					
+					allLoopvaldsArr = allLoopvalds.split("\n")
 
-					print x
+					for x in allLoopvaldsArr:
 
-					temploop, tempseg, tempval = x.split("|")
+						print x
 
-					# get segment values
-					tempXmlResponseSegments = getSegmentValues(xmlresponse.strip(), temploop.strip(), tempseg.strip())
-					print tempXmlResponseSegments
+						temploop, tempseg, tempval = x.split("|")
 
-					xmlResponseSegmentsArr.append(tempXmlResponseSegments)
+						# get segment values
+						tempXmlResponseSegments = getSegmentValues(xmlresponse.strip(), temploop.strip(), tempseg.strip())
+						print tempXmlResponseSegments
 
-					# checking if the success key exists in the dictionary
-					if 'success' in tempXmlResponseSegments:
+						xmlResponseSegmentsArr.append(tempXmlResponseSegments)
 
-						# compare and get the result
-						tempRespResult = compareResponse(tempXmlResponseSegments['success'], tempval.strip(), temploop.strip())
+						# checking if the success key exists in the dictionary
+						if 'success' in tempXmlResponseSegments:
 
-						if tempRespResult['result'] == 'Pass':
+							# compare and get the result
+							tempRespResult = compareResponse(tempXmlResponseSegments['success'], tempval.strip(), temploop.strip())
 
-							print tempRespResult['msg']
+							if tempRespResult['result'] == 'Pass':
 
-							xmlFinalResultArr.append({'Pass' : ['Pass', tempRespResult['msg']]})
+								print tempRespResult['msg']
+
+								xmlFinalResultArr.append({'Pass' : ['Pass', tempRespResult['msg']]})
+								
+								# return json.dumps()
 							
-							# return json.dumps()
-						
-						else:
+							else:
 
-							print tempRespResult['msg']
+								print tempRespResult['msg']
 
-							xmlFinalResultArr.append({'Fail' : ['Fail', tempRespResult['msg']]})
+								xmlFinalResultArr.append({'Fail' : ['Fail', tempRespResult['msg']]})
+								# return json.dumps
+
+
+						elif 'error' in tempXmlResponseSegments:
+
+							print tempXmlResponseSegments['error']
+
+							xmlFinalResultArr.append({'Fail' : ['Fail', tempXmlResponseSegments['error']]})
 							# return json.dumps
 
+				else:
 
-					elif 'error' in tempXmlResponseSegments:
+					xmlFinalResultArr.append({'Fail' : ['Fail', respCodeDesc]})
+					# return json.dumps(xmlFinalResultArr)
 
-						print tempXmlResponseSegments['error']
+			# To do error scenarios
+			elif expresp.upper() == 'ERROR':
+				
+				if respCodeDesc.upper() == 'ERROR':
 
-						xmlFinalResultArr.append({'Fail' : ['Fail', tempXmlResponseSegments['error']]})
-						# return json.dumps
+					pass
 
-			else:
+		else:
 
-				xmlFinalResultArr.append({'Fail' : ['Fail', respCodeDesc]})
-				# return json.dumps(xmlFinalResultArr)
-
-		# To do error scenarios
-		elif expresp.upper() == 'ERROR':
-			
-			if respCodeDesc.upper() == 'ERROR':
-
-				pass
+			xmlFinalResultArr.append({'Pass' : ['Pass', 'No X12 validation required.']})
 
 
 		print xmlFinalResultArr
@@ -762,10 +812,12 @@ def regressionreal():
 		for x in xmlFinalResultArr:
 			if 'Fail' in x:
 				print "inside"
-				return json.dumps({'result' : 'Fail', 'msg' : xmlFinalResultArr, 'responseX12' : x12resp})
+				return json.dumps({'result' : 'Fail', 'msg' : xmlFinalResultArr, 'responseX12' : x12resp,
+					'tckngId' : tckngId, 'respCodeDesc' : respCodeDesc})
 
 
-		return json.dumps({'result' : 'Pass', 'msg' : xmlFinalResultArr, 'responseX12' : x12resp})
+		return json.dumps({'result' : 'Pass', 'msg' : xmlFinalResultArr, 'responseX12' : x12resp,
+			'tckngId' : tckngId, 'respCodeDesc' : respCodeDesc})
 
 	msg_disc = disconnect_database(CONN)
 	print msg_disc		
